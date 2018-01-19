@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="board">
+
+	<select id="getBoardList" resultType="vo.BoardVo">
+		select * from board order
+		by root desc, step asc
+	</select>
+
+	<select id="getPageList" resultType="vo.BoardVo">
+ 		select * from (select ROW_NUMBER() OVER (order by root desc, step asc) rnum, b.* from board b)
+		where rnum between #{fno} and #{tno} 
+	</select>
+
+	<select id="getBoard" resultType="vo.BoardVo">
+		select * from board where seq =
+		#{seq}
+	</select>
+
+	<update id="viewCount">
+		update board set cnt = cnt + 1 where seq = #{seq}
+	</update>
+
+	<insert id="insert">
+		insert into board values((select nvl(max(seq), 0)+1
+		from board), #{title}, #{writer}, #{content}, sysdate, 0, (select
+		nvl(max(seq), 0)+1 from board), 0, 0)
+	</insert>
+
+	<update id="update">
+		update board set title = #{title}, writer =
+		#{writer}, content = #{content}, regdate = #{regdate}, cnt = #{cnt}
+		where seq = #{seq}
+	</update>
+
+	<delete id="delete">
+		delete board 
+			<if test="indent=0">where root = #{root}</if>
+			<if test="indent!=0">where root = #{seq}</if>	
+	</delete>
+
+	<update id="stepUpdate">
+		update board set step = step+1 where root = #{root}
+		and step >= #{step}
+	</update>
+
+	<insert id="insertReply">
+		insert into board values((select nvl(max(seq), 0)+1
+		from board), #{title}, #{writer}, #{content}, sysdate, 0, #{root},
+		#{step}, #{indent})
+	</insert>
+
+	<select id="pagingList" resultType="vo.PageVO">
+		select * from board order by
+		root desc, step asc
+	</select>
+
+	<select id="totalCount" resultType="integer">
+		select count(seq) count from
+		board
+	</select>
+</mapper>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>** member Join Form **</title>
+<script src="../resources/js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript">
+	$(document).ready(function() {
+		$('#id').focus(function() {
+			$('#id_msg').text('');
+		})
+
+		$('#password').focus(function() {
+			$('#password_msg').text('');
+		})
+
+		$('#name').focus(function() {
+			$('#name_msg').text('');
+		})
+
+
+		$('#birthd').focus(function() {
+			$('#birthd_msg').text('');
+		})
+
+
+		$('#point').focus(function() {
+			$('#point_msg').text('');
+		})
+
+		$('#weight').focus(function() {
+			$('#weight_msg').text('');
+		})
+
+
+		$('form').submit(function(event) {
+			var result = true;
+
+			var id = $('#id').val();
+			if (id.length < 3 | id.length > 20) {
+				$('#id_msg').text('길이가 올바르지 않습니다.');
+				result = false;
+			} else if (!/^[A-Za-z0-9_-]{3,20}$/.test(id)) {
+				$('#id_msg').text('id는 알파벳,숫자, \'_\' , \'-\' 만 가능합니다.');
+				result = false;
+			}
+
+			var password = $('#password').val();
+			if (password.length < 9 | password.length > 20) {
+				$('#password_msg').text('길이가 올바르지 않습니다.');
+				result = false;
+			} else if (/^[A-Za-z0-9]{4,16}$/.test(password)) {
+				$('#password_msg').text('패스워드는 알파벳, 숫자 만 가능합니다.');
+				result = false;
+			}
+
+			var name = $('#name').val();
+			if (name.length < 2) {
+				$('#name_msg').text('길이가 올바르지 않습니다.');
+				result = false;
+			} else if (name.replace(/[가-힣]/g, '').length > 0) {
+				$('#name_msg').text('이름은 한글만 가능합니다.');
+				result = false;
+			}
+
+
+			var Now = new Date();
+			var birthd = $('#birthd').val();
+			alert(birthd + ' ' + Now.toLocaleDateString())
+			if (birthd.replace('-', '') > Now.toLocaleDateString().replace('.', '')) {
+				$('#birthd_msg').text('제대로 된 입력 값이 아닙니다.');
+				result = false;
+			}
+
+			var point = $('#point').val();
+			if (point.length < 2) {
+				$('#point_msg').text('길이가 올바르지 않습니다.');
+				result = false;
+			} else if (point.length > 10) {
+				$('#point_msg').text('10자리 이상될 수 없습니다.');
+				result = false;
+			}
+
+			var weights = $('#weight').val().split('.');
+			if (weights[0].length < 1) {
+				$('#weight_msg').text('길이가 올바르지 않습니다.');
+				result = false;
+			} else if (weights[0].length > 3) {
+				$('#weight_msg').text('999.99 이상 입력될 수 없습니다.');
+				result = false;
+			} else if (weights[1].length > 2) {
+				$('#weight_msg').text('소숫점 둘째 자리까지 가능합니다.');
+				result = false;
+			}
+
+			return result;
+		})
+	});
+</script>
+</head>
+<body>
+	<h1>** member Join Form **</h1>
+	<br>
+	<form action="/Spring03/mjoin.do" method="post">
+		<table border="1" width="700">
+			<tr height="40">
+				<td bgcolor="gray" width="100" align="center">ID</td>
+				<td align="left"><input type="text" name="id" id="id"></input>
+					<span id="id_msg" style="color: red"></span></td>
+			</tr>
+			<tr>
+				<td bgcolor="gray" width="100" align="center">Password</td>
+				<td align="left"><input type="text" name="password"
+					id="password"></input> <span id="password_msg" style="color: red"></span></td>
+			</tr>
+			<tr>
+				<td bgcolor="gray" width="100" align="center">Name</td>
+				<td align="left"><input type="text" name="name" id="name"></input>
+					<span id="name_msg" style="color: red"></span></td>
+			</tr>
+			<tr>
+				<td bgcolor="gray" width="100" align="center">Level</td>
+				<td align="left"><select name="lev" id="lev">
+						<option value="A">관리자</option>
+						<option value="B">나무</option>
+						<option value="C">잎새</option>
+						<option value="D" selected>새싹</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td bgcolor="gray" width="100" align="center">BirthDay</td>
+				<td align="left"><input name="birthd" type="date"
+					value="2012-07-09" id="birthd" />&nbsp</input><span id="birthd_msg"
+					style="color: red"></span></td>
+			</tr>
+			<tr>
+				<td bgcolor="gray" width="100" align="center">Point</td>
+				<td align="left"><input type="text" name="point" id="point"></input>
+					<span id="point_msg" style="color: red"></span></td>
+			</tr>
+			<tr>
+				<td bgcolor="gray" width="100" align="center">Weight</td>
+				<td align="left"><input type="text" name="weight" id="weight"></input>
+					<span id="weight_msg" style="color: red"></span></td>
+			</tr>
+			<tr height="40">
+				<td colspan="2" align="center"><input type="reset" value="취 소" /><input
+					type="submit" value="등 록" /></td>
+			</tr>
+		</table>
+	</form>
+</body>
+</html>
