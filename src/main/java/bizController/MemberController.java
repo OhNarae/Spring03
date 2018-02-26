@@ -12,11 +12,13 @@ import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import mybatisUtil.MService;
+import mybatisUtil.*;
 import vo.MemberVO;
 import vo.UserVO;
 import vo.UserVO2;
@@ -26,6 +28,22 @@ public class MemberController {
 
 	@Autowired
 	private MService mDAO;
+	
+
+	
+	@RequestMapping(value = "/except.do")
+	public ModelAndView except(HttpServletRequest request, HttpServletResponse response, ModelAndView mav)
+			throws Exception {
+
+		int i = 0;
+		int a = 3/i;
+		
+		List<MemberVO> mList = mDAO.getMemberList();
+		mav.addObject("orange", mList);
+
+		mav.setViewName("mvcMember/memberList");
+		return mav;
+	}
 
 	@RequestMapping(value = "/mlist.do")
 	public ModelAndView mlist(HttpServletRequest request, HttpServletResponse response, ModelAndView mav)
@@ -102,6 +120,7 @@ public class MemberController {
 		mvo.setUploadfile("/Spring03/resources/uploadImage/" + uploadfile.getOriginalFilename());
 
 		int cnt = mDAO.mInert(mvo);
+		cnt = mDAO.mInert(mvo);
 		if (cnt > 0) {
 			mav.addObject("isJoin", "T");
 			mav.addObject("cnt", cnt);

@@ -1,23 +1,101 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.2.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+
+ 	<context:component-scan base-package="bizController, mybatisUtil"></context:component-scan>
+
+	<!-- <aop:aspectj-autoproxy></aop:aspectj-autoproxy> -->
 	
-	<context:component-scan base-package="bizUtil"></context:component-scan> 
-	<context:component-scan base-package="bizController"></context:component-scan>
+	<!-- Enables the Spring MVC @Controller programming model -->
+	<mvc:annotation-driven />
 
 	<!-- ViewResolver 등록 -->
-	<bean id="viewResolver" 
+	<bean id="viewResolver"
 		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 		<!-- <property name="prefix" value="/loginMvC/"></property> -->
 		<property name="prefix" value="/" />
-		<property name="suffix" value=".jsp"></property>	
+		<property name="suffix" value=".jsp"></property>
 	</bean>
-	 
+
 	<bean id="multipartResolver"
 		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
 		<property name="maxUploadSize" value="-1" />
 	</bean>
+
+	<bean id="exceptionResolver"
+		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+				<prop key="org.springframework.dao.DuplicateKeyException">
+					eMsg/sqlexceptionMessage
+				</prop>
+				<prop key="java.lang.IllegalArgumentException">
+					eMsg/ilexceptionMessage
+				</prop>
+				<prop key="java.lang.ArithmeticException">
+					eMsg/arexceptionMessage
+				</prop>
+			</props>
+		</property>
+		<property name="defaultErrorView" value="eMsg/exceptionMessage"></property>
+	</bean>
+	
+		<!-- 데이터베이스 연결 -->
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"></property>
+		<property name="url" value="jdbc:oracle:thin:@127.0.0.1:1521:XE"></property>
+		<property name="username" value="system"></property>
+		<property name="password" value="oracle"></property>
+	</bean>
+
+	<!-- SqlSessionFactory 객체 설정 - MyBatis 와 연동시 핵심 클래스 - DB 연결과 SQL 실행의 핵심 
+		클래스 - SqlSessionFactoryBean 에 의해 생성됨 - root-context.xml 에 추가 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- MyBatis 설정 파일의 위치를 지정 : 스프링 동작시 같이 동작 하도록 -->
+		<property name="configLocation" value="classpath:/mybatis-config.xml"></property>
+		<!-- SQL 파일의 위치를 지정합니다. mappers 폴더내의 모든 폴더의 *Mapper.xml 을 인식하도록 해줌 -->
+		<property name="mapperLocations" value="classpath:/mappers/*Mapper.xml"></property>
+	</bean>
+
+	<!-- SqlSessionTemplate DB연결 & Close sqlSessionFactory 를 생성자로 주입해서 설정 -->
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate"
+		destroy-method="clearCache">
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory"></constructor-arg>
+	</bean>
+	<!-- 트랜잭션 관리자 클래스 등록 : => PlattformTransactionManager 인터페이스를 구현한 클래스 들 => 
+		DataSourceTransactionManager : JDBC, Mybatis 모두 지원 => commit, rollback 지원 -->
+	<bean id="txManeger"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	<!-- => Transaction 관리 Advice 설정 => 스프링 컨테이너가 <tx:advice> 설정을 참조하여 자동으로 
+		생성 -->
+	<tx:advice id="txAdvice" transaction-manager="txManeger">
+		<!-- 어드바이스 txAdvice는 앞서 설정한 txManeger를 이용하여 트랜잭션을 관리 -->
+		<tx:attributes>
+			<!-- 자식 엘리먼트인 <tx:method> 이용하여 트랜잭션 적용 메서드를 지정함 -->
+			<tx:method name="get*" read-only="true" />
+			<!-- get으로 시작되는 모든 메서드는 read_only로 처리되어 트랜잭션 관리 대상에서 제외되며 나머지는 관리대상이 됨 -->
+			<tx:method name="*" rollback-for="Exception" />
+		</tx:attributes>
+	</tx:advice>
+	<!-- => AOP 설정 해당 비즈니스 메서드 실행 후 트랜잭션 관리 어드바이스가 동작 하도록 해줌 -->
+	<aop:config>
+		<aop:pointcut id="txPointcut"
+			expression="execution(* bizController.MemberController.mjoin(..))" />
+		<!-- "execution(*리턴타입, 패키지경로.클래스명.매서드명(..))" -->
+
+		<!-- ~ 어드바이스 메서드가 적용될 비즈니스메서드를 표현식(expression) 으로 지정 -->
+		<aop:advisor pointcut-ref="txPointcut" advice-ref="txAdvice" />
+	</aop:config>
 </beans>
